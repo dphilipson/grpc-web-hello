@@ -5,7 +5,5 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./envoy.yml:/etc/envoy/envoy.yml
-    command:
-      - -c
-      - /etc/envoy/envoy.yml
+      # .yml vs .yaml is important for Envoy: it needs the latter to not parse as JSON.
+      - ./envoy.dev.yml:/etc/envoy/envoy.yaml
