@@ -1,6 +1,5 @@
 use hello_world::greeter_server::{Greeter, GreeterServer};
 use hello_world::{HelloRequest, HelloResponse};
-use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::time;

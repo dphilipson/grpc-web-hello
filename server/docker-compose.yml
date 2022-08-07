@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  envoy-for-grpc:
+    image: envoyproxy/envoy:v1.22.4
+    ports:
+      - 8080:8080
+    volumes:
+      - ./envoy.yml:/etc/envoy/envoy.yml
+    command:
+      - -c
+      - /etc/envoy/envoy.yml
