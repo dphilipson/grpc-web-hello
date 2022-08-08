@@ -1,9 +1,14 @@
 version: "3.8"
 services:
-  envoy-for-grpc:
-    image: envoyproxy/envoy:v1.22.4
+  grpc-web-proxy:
+    image: debian:buster-slim
     ports:
       - 8080:8080
     volumes:
-      # .yml vs .yaml is important for Envoy: it needs the latter to not parse as JSON.
-      - ./envoy.dev.yml:/etc/envoy/envoy.yaml
+      - ./docker-deps/grpcwebproxy:/usr/local/bin/grpcwebproxy
+    command:
+      - grpcwebproxy
+      - --backend_addr=host.docker.internal:50051
+      - --backend_tls=false
+      - --run_tls_server=false
+      - --allow_all_origins

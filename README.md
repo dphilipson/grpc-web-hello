@@ -68,7 +68,7 @@ My next goal was to build a normal Rust gRPC server (not gRPC-Web) based on
   client has cancelled out of a server-side stream. The way Tonic indicates this
   is that the `Stream` that our method returns is dropped, so we need to provide
   a custom `Stream` implementation that has a custom implementation of the
-  `Drop` trait. This conceptually makes sense (it means the program willnever
+  `Drop` trait. This conceptually makes sense (it means the program will never
   end up hanging on to a `Stream` instance after the client has left), but felt
   a bit clunky to actually work with. I could probably make this better by
   writing some helpers.
@@ -94,11 +94,18 @@ My next goal was to build a normal Rust gRPC server (not gRPC-Web) based on
   musl, plus it'll get much worse later anyways because of Envoy as we'll see in
   the next section.
 
-# To gRPC-Web
+## To gRPC-Web
 
-Now to turn gRPC into gRPC-Web. This means we need to run an Envoy reverse-proxy
-server to do something or other involving turning the browser's HTTP/1.1 into
-the HTTP/2 our gRPC server understands.
+Now to turn gRPC into gRPC-Web. This means we need to run a reverse-proxy in
+front of our gRPC server from the previous section. The proxy will do something
+involving turning the browser's HTTP/1.1 into the HTTP/2 our gRPC server
+understands.
+
+I wasted a **lot** of time here trying to do this with Envoy first, because
+that's the only proxy mentioned in the docs on the [gRPC
+website](https://grpc.io/docs/platforms/web/). Let's see how that went.
+
+### Envoy
 
 - Running this locally at first wasn't bad. I spun up an Envoy container and
   gave it the example configuration from the gRPC-Web docs. The only thing I
@@ -147,35 +154,27 @@ the HTTP/2 our gRPC server understands.
   commands](https://www.envoyproxy.io/docs/envoy/latest/start/install#install-envoy-on-debian-gnu-linux)
   from their Getting Started guide.
 
-- Because I'm dumb, I had trouble getting the Docker image to run two programs
-  at once (Envoy and the gRPC server). At first I tried
-
-  ```dockerfile
-  RUN envoy -c /etc/envoy/envoy.yaml &
-  CMD ["grpc-web-hello"]
-  ```
-
-  then
-
-  ```dockerfile
-  RUN nohup envoy -c /etc/envoy/envoy.yaml &
-  CMD ["grpc-web-hello"]
-  ```
-
-  but neither of these actually ended up with the Envoy server running on
-  container startup, plus I learned I don't actually understand what nohup does.
-  Eventually I just went with
-
-  ```dockerfile
-  CMD envoy -c /etc/envoy/envoy.yaml & grpc-web-hello
-  ```
-
-  which does the job. Now everything works! Hooray!
-
 - The `debian:buster-slim` base image is 69 MB. My Rust gRPC server executable
   is only 7 MB (!!). But adding Envoy to the image adds 200 MB. This puts the
   total image size at 276 MB, the vast majority of which is Envoy and its
   dependencies. Hope all that space helps it do its job well!
+
+### gRPC Web Proxy
+
+Eventually I noticed that the gRPC-Web GitHub readme also mentioned another
+proxy, [gRPC Web
+Proxy](https://github.com/improbable-eng/grpc-web/tree/master/go/grpcwebproxy).
+I should have just used this in the beginning. Its big advantages:
+
+- Much simpler configuration.
+- It's 15 MB instead of 200 MB.
+- It has really nice gRPC-specific logging.
+- It has a standalone executable, so it's easy to add to containers.
+- The docs actually say it's intended to be used as a companion process in a
+  gRPC server container, so I don't feel guilty about putting the proxy and
+  server in the same container anymore.
+
+I replaced Envoy and got this working in a tenth of the time.
 
 ## Conclusion
 
@@ -186,22 +185,20 @@ subscriptions with WebSockets instead. What are the pros and cons?
 
 - Generated stubs. Kind of significant because implementing a WebSocket
   interface from scratch is hard work, both on the client- and server-sides.
-- If there are other servers that are clients of the backend, then they and the
-  frontend can use the same gRPC endpoints rather than making separate ones for
-  frontend and backend calls.
+- If the server has clients on both the frontend and backend, then all clients
+  can use the same API rather than having a separate APIs for frontend and
+  backend.
 
 ### gRPC-Web disadvantages
 
 - Huge frontend bundle size increase (230 KB parsed, 46 KB gzipped).
-- Need to deal with an Envoy reverse-proxy server on the backend. You get this
-  for "free" if you were already using Envoy for something, but if not then it
-  adds a fair bit of complexity to deployment.
+- Can't reasonably use the Network tab to debug payloads.
 - Unclear if it provides any benefits in speed or bandwidth over JSON, due to
   using base-64 text rather than binary.
 - As of today (August 8), the latest version of protoc is completely broken for
   JavaScript, which lowers my faith in how well this is supported.
 
-The drawbacks, especially the first two, are terrible. I can't really recommend
-gRPC-Web for serious use in good conscience. And yet, in spite of all that I'm
-still tempted to keep trying it purely to avoid writing WebSocket
-communications, with all of their error-checking and state management, by hand.
+The first drawback is the worst one and it's terrible. And yet, in spite of it
+I'm still tempted to keep using gRPC-Web purely to avoid writing WebSocket
+communications by hand, with all of their error-checking and state management in
+both the client and server.
