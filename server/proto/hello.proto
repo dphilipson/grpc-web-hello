@@ -1,15 +1,19 @@
 syntax = "proto3";
 package hello;
 
-service Greeter {
-  rpc SayHello (HelloRequest) returns (HelloResponse);
-  rpc GetPeriodicHellos (HelloRequest) returns (stream HelloResponse);
+service SubscriptionCounter {
+  rpc GetSubscriptionCount (SubscriptionCountRequest) returns (SubscriptionCountResponse);
+  rpc Subscribe (SubscribeRequest) returns (stream SubscribeUpdate);
 }
 
-message HelloRequest {
-  string name = 1;
+message SubscriptionCountRequest {}
+
+message SubscriptionCountResponse {
+  uint32 count = 1;
 }
 
-message HelloResponse {
-  string message = 1;
+message SubscribeRequest {}
+
+message SubscribeUpdate {
+  uint32 count = 1;
 }

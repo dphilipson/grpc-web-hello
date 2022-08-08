@@ -1,0 +1,50 @@
+{
+  "name": "grpc-web-hello-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "grpc-web-hello-app",
+  "author": "David Philipson",
+  "keywords": [
+    "gatsby"
+  ],
+  "scripts": {
+    "build": "gatsby build",
+    "clean": "gatsby clean",
+    "develop": "gatsby develop",
+    "generate-protos": "scripts/generate-protos.sh",
+    "prepare": "yarn generate-protos",
+    "serve": "gatsby serve",
+    "start": "gatsby develop",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.10.0",
+    "@emotion/styled": "^11.10.0",
+    "gatsby": "^4.20.0",
+    "gatsby-plugin-emotion": "^7.20.0",
+    "gatsby-plugin-google-analytics": "^4.20.0",
+    "gatsby-plugin-image": "^2.20.0",
+    "gatsby-plugin-manifest": "^4.20.0",
+    "gatsby-plugin-sharp": "^4.20.0",
+    "gatsby-source-filesystem": "^4.20.0",
+    "gatsby-transformer-sharp": "^4.20.0",
+    "google-protobuf": "^3.21.0",
+    "grpc-web": "^1.3.1",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.6.4",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
+    "eslint": "^8.21.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-react": "^7.30.1",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "gatsby-plugin-webpack-bundle-analyser-v2": "^1.1.27",
+    "prettier": "^2.7.1",
+    "typescript": "^4.7.4"
+  }
+}
