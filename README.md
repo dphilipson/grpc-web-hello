@@ -176,6 +176,19 @@ I should have just used this in the beginning. Its big advantages:
 
 I replaced Envoy and got this working in a tenth of the time.
 
+### tonic-web
+
+As it turns out, I didn't need to do any of this because Rust's gRPC library
+supports gRPC-Web on its own, if you use the `tonic_web` crate. There's an
+undocumented need to set up CORS when you do this, which I found buried in a
+[GitHub
+issue](https://github.com/hyperium/tonic/issues/1174#issuecomment-1332341548),
+but once you do that this just works and we no longer need to run other
+processes.
+
+I'm still glad I did it the other way first, because you would need to do this
+if your server were in a language which doesn't have a gRPC-Web library.
+
 ## Conclusion
 
 Was it worth it? The alternative to gRPC-Web would be to implement the

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
@@ -8,7 +8,10 @@ use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::{mpsc, oneshot, RwLock};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
+use tonic::codegen::http::Method;
 use tonic::{transport::Server, Request, Response, Status};
+use tonic_web::GrpcWebLayer;
+use tower_http::cors::{Any, CorsLayer};
 
 use hello_world::subscription_counter_server::{SubscriptionCounter, SubscriptionCounterServer};
 use hello_world::{
@@ -21,7 +24,7 @@ pub mod hello_world {
 
 #[derive(Debug, Default)]
 pub struct MySubscriptionCounter {
-    next_id: AtomicUsize,
+    next_id: AtomicU64,
     contexts_by_id: Arc<RwLock<HashMap<SubscriptionId, SubscriptionContext>>>,
 }
 
@@ -95,7 +98,7 @@ impl SubscriptionCounter for MySubscriptionCounter {
 }
 
 /// The way to detect that the client has disconnected from a server-side stream
-/// in Tonic is that the receiver stream is dropped. This time helps us work
+/// in Tonic is that the receiver stream is dropped. This type helps us work
 /// with this interface, by delegating to a plain ReceiverStream, but also
 /// using a oneshot channel to notify when this is dropped.
 pub struct DropStream<T> {
@@ -136,7 +139,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::]:50051".parse()?;
     println!("Starting server at {}.", addr);
     let subscription_counter = MySubscriptionCounter::default();
+    let cors_layer = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_headers(Any)
+        .allow_origin(Any);
     Server::builder()
+        .accept_http1(true)
+        .layer(cors_layer)
+        .layer(GrpcWebLayer::new())
         .add_service(SubscriptionCounterServer::new(subscription_counter))
         .serve(addr)
         .await?;

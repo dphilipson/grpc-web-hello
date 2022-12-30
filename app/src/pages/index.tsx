@@ -12,7 +12,7 @@ export default memo(function IndexPage(): ReactElement {
   const [count, setCount] = useState(0);
   useEffect(() => {
     const counterService = new SubscriptionCounterPromiseClient(
-      "http://localhost:8080"
+      "http://localhost:50051"
     );
     void (async () => {
       try {

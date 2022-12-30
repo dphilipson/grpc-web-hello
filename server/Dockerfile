@@ -16,8 +16,6 @@ RUN cargo build --release
 
 FROM debian:buster-slim
 
-COPY ./docker-deps/run.sh /home/run.sh
-COPY ./docker-deps/grpcwebproxy /usr/local/bin/grpcwebproxy
 COPY --from=cargo-build /usr/src/grpc-web-hello/target/release/grpc-web-hello /usr/local/bin/grpc-web-hello
-EXPOSE 8080
-CMD ["sh", "-c", "/home/run.sh"]
+EXPOSE 50051
+CMD ["grpc-web-hello"]
