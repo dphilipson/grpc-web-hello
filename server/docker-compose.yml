@@ -12,3 +12,4 @@ services:
       - --backend_tls=false
       - --run_tls_server=false
       - --allow_all_origins
+      - --server_http_max_write_timeout=1h

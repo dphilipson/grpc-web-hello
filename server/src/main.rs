@@ -26,7 +26,7 @@ pub struct MySubscriptionCounter {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-struct SubscriptionId(usize);
+struct SubscriptionId(u64);
 
 #[derive(Debug)]
 struct SubscriptionContext {
